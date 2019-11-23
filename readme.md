@@ -1,9 +1,9 @@
 # Настройка драйвера
 
-1. Добавить путь к файлу UnitechMsrSO.dll (Service Object) в реестре. Для этого в ветке реестра HKEY_LOCAL_MACHINE\SOFTWARE\Wow6432Node\POSfor.NET\ControlAssemblies необходимо добавить строковый параметр
-Unitech=D:\Full\Path\To\Driver
+1. Add path to UnitechMsrSO.dll (Service Object) to the register. Add string parameter to the HKEY_LOCAL_MACHINE\SOFTWARE\Wow6432Node\POSfor.NET\ControlAssemblies registry key
+Unitech=<Full Path to UnitechMsrSO.dll>, e.g Unitech=D:\driver\Unitech
 
-2. Настроить файл Configuration.xml
+2. Edit Configuration.xml file. Full path to configuration file is stored in string param Configuration in HKEY_LOCAL_MACHINE\SOFTWARE\Wow6432Node\POSfor.NET\ registry path.
 
 ```xml
 <PointOfServiceConfig Version="1.0">
@@ -16,4 +16,4 @@ Unitech=D:\Full\Path\To\Driver
 </PointOfServiceConfig>
 ```
 
-Здесь вместо COM1 нужно подставить порт, к которому подключено устройство.
+Write serial port name instread of "COM1"
