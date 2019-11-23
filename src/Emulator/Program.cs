@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+using System.Threading;
 
 namespace Emulator
 {
@@ -21,9 +22,12 @@ namespace Emulator
             var portName = args[0];
             var msrEmulator = new MsrEmulator();
             msrEmulator.Start(portName);
+            ManualResetEvent asd = new ManualResetEvent(false);
             do
             {
-                var c = Console.ReadKey(true);
+                while (!Console.KeyAvailable)
+                    asd.WaitOne(50);
+                    var c = Console.ReadKey(true);
                 if (c.KeyChar == '1')
                     msrEmulator.EmulateCardRoll();
                 if (c.KeyChar == 'q')

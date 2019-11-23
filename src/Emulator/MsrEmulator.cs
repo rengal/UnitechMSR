@@ -1,23 +1,39 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO.Ports;
-using System.Linq;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using com.iiko.unitech;
+using com.iiko.unitech.Protocol;
 
 namespace Emulator
 {
     public class MsrEmulator : IDisposable
     {
+        private enum CardRollMode
+        {
+            Idle,
+            ReadRaw,
+            Read
+        }
+
         private readonly object gate = new object();
         private SerialPort port;
-        private byte[] buffer;
+        private byte[] buffer = { };
         private int bufferLength;
         private readonly TimeSpan bufferTimeout = TimeSpan.FromMilliseconds(500);
         private CancellationTokenSource clearBufferCts;
-        private bool trackRequested;
+        private CardRollMode cardRollMode;
         private bool emulateCardRoll;
+
+
+        private static readonly byte[] TestConnectionResponse = { 0x1b, 0x79 };
+
+        private static readonly byte[] CardRollResponseRaw =
+        {
+            0x1b, 0x73, 0x1b, 0x01, 0x00, 0x1b, 0x02, 0x1d, 0xd7, 0x38, 0x2b, 0x23, 0x21, 0xa8, 0x42, 0x18,
+            0x59, 0x08, 0x0d, 0x42, 0x10, 0x85, 0x1f, 0x70, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+            0x00, 0x00, 0x00, 0x00, 0x00, 0x1b, 0x03, 0x00, 0x3f, 0x1c, 0x1b, 0x30
+        };
 
         private static readonly byte[] CardRollResponse =
         {
@@ -29,6 +45,11 @@ namespace Emulator
         private static readonly byte[] ModelResponse =
         {
             0x1B, 0x33, 0x53
+        };
+
+        private static readonly byte[] FirmwareResponse =
+        {
+            0x1B, 0x52, 0x45, 0x56, 0x55, 0x31, 0x2E, 0x30, 0x32
         };
 
         public void Start(string portName)
@@ -52,12 +73,12 @@ namespace Emulator
 
         private void CheckCardRollResponse()
         {
-            if (emulateCardRoll && trackRequested)
-            {
-                port.Write(CardRollResponse, 0, CardRollResponse.Length);
-                emulateCardRoll = false;
-                trackRequested = false;
-            }
+            if (!emulateCardRoll || cardRollMode == CardRollMode.Idle)
+                return;
+            port.Write(CardRollResponse, 0, CardRollResponse.Length);
+            Console.WriteLine($"-> {Utils.ByteArrayToHexString(CardRollResponse, 0, CardRollResponse.Length)}");
+            cardRollMode = CardRollMode.Idle;
+            emulateCardRoll = false;
         }
 
         private void Port_DataReceived(object sender, SerialDataReceivedEventArgs e)
@@ -69,9 +90,20 @@ namespace Emulator
                 if (buffer.Length < bufferLength + bytesToRead)
                     Array.Resize(ref buffer, bufferLength + bytesToRead);
                 bufferLength += serialPort.Read(buffer, 0, bytesToRead);
+                if (ProcessBuffer())
+                    ClearBuffer();
+                else
+                    ScheduleClearBuffer(bufferTimeout);
+            }
+        }
+
+        private void ScheduleClearBuffer(TimeSpan interval)
+        {
+            lock (gate)
+            {
                 clearBufferCts?.Cancel();
                 clearBufferCts = new CancellationTokenSource();
-                Task.Delay(bufferTimeout).ContinueWith(_ =>
+                Task.Delay(interval).ContinueWith(_ =>
                 {
                     lock (gate)
                     {
@@ -80,7 +112,6 @@ namespace Emulator
                         ClearBuffer();
                     }
                 }, clearBufferCts.Token);
-                ProcessBuffer();
             }
         }
 
@@ -88,25 +119,53 @@ namespace Emulator
         {
             lock (gate)
             {
+                clearBufferCts?.Cancel();
                 bufferLength = 0;
             }
         }
 
-        private void ProcessBuffer()
+        private bool ProcessBuffer()
         {
             lock (gate)
             {
-                if (bufferLength == 2)
+                Console.WriteLine($"<-{Utils.ByteArrayToHexString(buffer, 0, bufferLength)}");
+                if (bufferLength < 2)
+                    return false;
+                if (buffer[0] != Packet.Esc)
+                    return false;
+                if (buffer[1] == (byte)RequestType.Reset)
                 {
-                    if (buffer[0] == 0x1B && buffer[1] == 0x74)
-                        port.Write(ModelResponse, 0, ModelResponse.Length);
-                    else if (buffer[0] == 0x1B && buffer[1] == 0x72)
-                    {
-                        trackRequested = true;
-                        CheckCardRollResponse();
-                    }
-                    ClearBuffer();
+                    Console.WriteLine("<- Reset");
+                    cardRollMode = CardRollMode.Idle;
                 }
+                else if (buffer[1] == (byte)RequestType.TestConnection)
+                {
+                    Console.WriteLine("<- TestConnection");
+                    port.Write(TestConnectionResponse, 0, TestConnectionResponse.Length);
+                    Console.WriteLine($"-> {Utils.ByteArrayToHexString(TestConnectionResponse, 0, TestConnectionResponse.Length)}");
+                }
+                else if (buffer[1] == (byte)RequestType.StartRead)
+                {
+                    Console.WriteLine("<- StartRead");
+                    cardRollMode = CardRollMode.Read;
+                    CheckCardRollResponse();
+                }
+                else if (buffer[1] == (byte)RequestType.GetDeviceModel)
+                {
+                    Console.WriteLine("<- GetDeviceModel");
+                    port.Write(ModelResponse, 0, ModelResponse.Length);
+                    Console.WriteLine($"-> {Utils.ByteArrayToHexString(ModelResponse, 0, ModelResponse.Length)}");
+                }
+                else if (buffer[1] == (byte)RequestType.GetFirmware)
+                {
+                    Console.WriteLine("<- GetFirmware");
+                    port.Write(FirmwareResponse, 0, FirmwareResponse.Length);
+                    Console.WriteLine($"-> {Utils.ByteArrayToHexString(FirmwareResponse, 0, FirmwareResponse.Length)}");
+                }
+                else
+                    return false;
+
+                return true;
             }
         }
 

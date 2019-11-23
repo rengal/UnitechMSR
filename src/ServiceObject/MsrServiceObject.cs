@@ -1,32 +1,36 @@
 ﻿using System;
-using com.iiko.unitech.Resourses;
+using log4net;
 using Microsoft.PointOfService;
+using Microsoft.PointOfService.BaseServiceObjects;
 
 [assembly: PosAssembly("iiko")]
 
 namespace com.iiko.unitech
 {
     [ServiceObject(DeviceType.Scanner, "Unitech", "POS .Net Driver for Unitech MSR", 1, 14)]
-    public class MsrServiceObject : Scanner
+    public class MsrServiceObject : ScannerBase
     {
+        private static readonly ILog Log = LogFactory.Instance.GetLogger(typeof(MsrServiceObject));
+
+        private string checkHealthText = "";
+        private MsrDriver driver;
+
         public override string CheckHealth(HealthCheckLevel level)
         {
-            return LocalResources.Success;
-        }
+            Log.Info("Check Health");
+            VerifyState(true, true);
+            try
+            {
+                var testConnectionResult = driver.TestConnection();
+                checkHealthText = $"Completed with status: 0x{testConnectionResult.Status:X02}";
+            }
+            catch (PosControlException e)
+            {
+                checkHealthText = e.Message;
+                throw;
+            }
 
-        public override void Claim(int timeout)
-        {
-            throw new NotImplementedException();
-        }
-
-        public override void Close()
-        {
-            throw new NotImplementedException();
-        }
-
-        public override void Open()
-        {
-            throw new NotImplementedException();
+            return checkHealthText;
         }
 
         public override DirectIOData DirectIO(int command, int data, object obj)
@@ -34,96 +38,63 @@ namespace com.iiko.unitech
             throw new NotImplementedException();
         }
 
-        public override void Release()
+        public override void Open()
         {
-            throw new NotImplementedException();
+            Log.Info("Open");
+            base.Open();
+            checkHealthText = "Opened";
+            Log.Info("Open - Ok");
         }
 
-        public override void ResetStatistics()
+        public override void Close()
         {
-            throw new NotImplementedException();
+            Log.Info("Close");
+            base.Close();
+            checkHealthText = "Closed";
+            Log.Info("Close - Ok");
         }
 
-        public override void ResetStatistics(StatisticCategories statistics)
+        public override bool DeviceEnabled
         {
-            throw new NotImplementedException();
+            // Device State checking done in base class
+            get => base.DeviceEnabled;
+            set
+            {
+                Log.Info($"Set_DeviceEnabled({value})");
+                if (value == base.DeviceEnabled)
+                    return;
+
+                base.DeviceEnabled = value;
+                try
+                {
+                    if (value)
+                    {
+                        driver = new MsrDriver(DevicePath);
+                    }
+                    driver.DeviceEnabled = value;
+
+                    if(value)
+                        driver.OnCardRolled += driver_OnCardRolled;
+                    else
+                        driver.OnCardRolled -= driver_OnCardRolled;
+                    checkHealthText = value ? "Enabled" : "Disabled";
+                    Log.Info($"Set_DeviceEnabled({value}) - Ok");
+                }
+                catch (PosControlException e)
+                {
+                    Log.Error($"Failed with error: {e.Message}");
+                    base.DeviceEnabled = false;
+                    checkHealthText = e.Message;
+                    throw;
+                }
+            }
         }
 
-        public override void ResetStatistics(string[] statistics)
+        public override string CheckHealthText => checkHealthText;
+
+        private void driver_OnCardRolled(object sender, byte[] scanData)
         {
-            throw new NotImplementedException();
+            GoodScan(scanData);
         }
-
-        public override void ResetStatistic(string statistic)
-        {
-            throw new NotImplementedException();
-        }
-
-        public override string RetrieveStatistics()
-        {
-            throw new NotImplementedException();
-        }
-
-        public override string RetrieveStatistics(StatisticCategories statistics)
-        {
-            throw new NotImplementedException();
-        }
-
-        public override string RetrieveStatistics(string[] statistics)
-        {
-            throw new NotImplementedException();
-        }
-
-        public override string RetrieveStatistic(string statistic)
-        {
-            throw new NotImplementedException();
-        }
-
-        public override void UpdateStatistic(string name, object value)
-        {
-            throw new NotImplementedException();
-        }
-
-        public override void UpdateStatistics(Statistic[] statistics)
-        {
-            throw new NotImplementedException();
-        }
-
-        public override void UpdateStatistics(StatisticCategories statistics, object value)
-        {
-            throw new NotImplementedException();
-        }
-
-        public override PowerReporting CapPowerReporting => PowerReporting.None;
-
-        public override bool CapStatisticsReporting => false;
-        public override bool CapUpdateStatistics => false;
-        public override string CheckHealthText => "";
-        public override bool Claimed => false;
-        public override string DeviceDescription => LocalResources.DeviceDescription;
-        public override bool DeviceEnabled { get; set; }
-        public override string DeviceName { get; }
-        public override bool FreezeEvents { get; set; }
-        public override PowerNotification PowerNotify { get; set; }
-        public override PowerState PowerState { get; }
-        public override string ServiceObjectDescription { get; }
-        public override ControlState State { get; }
-        public override event DirectIOEventHandler DirectIOEvent;
-        public override event StatusUpdateEventHandler StatusUpdateEvent;
-        public override void ClearInput()
-        {
-            throw new NotImplementedException();
-        }
-
-        public override int DataCount { get; }
-        public override bool DataEventEnabled { get; set; }
-        public override bool AutoDisable { get; set; }
-        public override bool DecodeData { get; set; }
-        public override byte[] ScanData { get; }
-        public override byte[] ScanDataLabel { get; }
-        public override BarCodeSymbology ScanDataType { get; }
-        public override event DataEventHandler DataEvent;
-        public override event DeviceErrorEventHandler ErrorEvent;
     }
-   
 }

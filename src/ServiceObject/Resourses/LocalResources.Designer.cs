@@ -8,7 +8,7 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-namespace com.iiko.unitech.Resourses {
+namespace iiko.unitech.Resourses {
     using System;
     
     
