@@ -1,4 +1,4 @@
-# Настройка драйвера
+# Step-by-step driver setup
 
 1. Add path to UnitechMsrSO.dll (Service Object) to the register. Add string parameter to the HKEY_LOCAL_MACHINE\SOFTWARE\Wow6432Node\POSfor.NET\ControlAssemblies registry key
 Unitech=<Full Path to UnitechMsrSO.dll>, e.g Unitech=D:\driver\Unitech
