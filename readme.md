@@ -37,4 +37,4 @@ Write serial port name instread of "COM1"
     <appender-ref ref="mainAppender" />
   </logger>
 </log4net>
-```xml
+```
