@@ -108,15 +108,12 @@ namespace com.iiko.unitech
 
             WaitHandle[] waitHandles = {completedEvent};
             WriteSerial(Serializer.Serialize(currentCommandDto.request));
-            Log.Info("WaitAny...");
             var waitIndex = WaitHandle.WaitAny(waitHandles, timeout);
-            Log.Info($"WaitAny={waitIndex}");
             lock (gate)
             {
                 switch (waitIndex)
                 {
                     case 0: //completed
-                        Log.Error("Command completed");
                         var result = currentCommandDto.response as TResult;
                         currentCommandDto = null;
                         return result;
