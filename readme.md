@@ -20,6 +20,7 @@ Write serial port name instread of "COM1"
 
 3. Put log4net.config file in the same folder as UnitechMsrSO.dll
 
+```xml
 <?xml version="1.0" encoding="utf-8"?>
 <log4net>
   <appender name="mainAppender" type="log4net.Appender.RollingFileAppender">
@@ -36,4 +37,4 @@ Write serial port name instread of "COM1"
     <appender-ref ref="mainAppender" />
   </logger>
 </log4net>
-
+```xml
