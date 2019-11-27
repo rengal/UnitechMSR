@@ -1,14 +1,14 @@
 # Step-by-step driver setup
 
-1. Go to the registry key
-**[HKEY_LOCAL_MACHINE\SOFTWARE\Wow6432Node\POSfor.NET\ControlAssemblies]**
+1. Go to the registry key  
+**[HKEY_LOCAL_MACHINE\SOFTWARE\Wow6432Node\POSfor.NET\ControlAssemblies]**  
 Create new string key with name *UnitehMSR* and specify full path to **UnitechMsrSO.dll** (not including the dll itself) in the value.
 
-2. Go to the registry key
-**[HKEY_LOCAL_MACHINE\SOFTWARE\Wow6432Node\POSfor.NET]**
+2. Go to the registry key  
+**[HKEY_LOCAL_MACHINE\SOFTWARE\Wow6432Node\POSfor.NET]**  
 locate configuration file in the **Configuration** key. By default, configuration file is located at
-**C:\ProgramData\Microsoft\Point Of Service\Configuration\Configuration.xml**
-
+**C:\ProgramData\Microsoft\Point Of Service\Configuration\Configuration.xml**  
+  
 Edit or create (if not exists) **Configuration.xml** file. Add new entry `ServiceObject` with `Name="Unitech"` parameter:
 
 
