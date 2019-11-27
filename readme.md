@@ -1,13 +1,19 @@
 # Step-by-step driver setup
 
-1. Add path to UnitechMsrSO.dll (Service Object) to the register. Add string parameter to the HKEY_LOCAL_MACHINE\SOFTWARE\Wow6432Node\POSfor.NET\ControlAssemblies registry key
-Unitech=<Full Path to UnitechMsrSO.dll>, e.g Unitech=D:\driver\Unitech
+1. Go to the registry key
+**[HKEY_LOCAL_MACHINE\SOFTWARE\Wow6432Node\POSfor.NET\ControlAssemblies]**
+Create new string key with name *UnitehMSR* and specify full path to **UnitechMsrSO.dll** (not including the dll itself) in the value.
 
-2. Edit Configuration.xml file. Full path to configuration file is stored in string param Configuration in HKEY_LOCAL_MACHINE\SOFTWARE\Wow6432Node\POSfor.NET\ registry path. By default,
-C:\ProgramData\Microsoft\Point Of Service\Configuration\Configuration.xml
+2. Go to the registry key
+**[HKEY_LOCAL_MACHINE\SOFTWARE\Wow6432Node\POSfor.NET]**
+locate configuration file in the **Configuration** key. By default, configuration file is located at
+**C:\ProgramData\Microsoft\Point Of Service\Configuration\Configuration.xml**
+
+Edit or create (if not exists) **Configuration.xml** file. Add new entry `ServiceObject` with `Name="Unitech"` parameter:
+
 
 ```xml
-<PointOfServiceConfig Version="1.0">
+<PointOfServiceConfig Version="1.0">у
   ...
   <ServiceObject Name="Unitech" Type="Scanner">
     <Device HardwarePath="COM1" Enabled="yes" PnP="no">
