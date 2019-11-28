@@ -32,7 +32,7 @@ Write serial port name instread of "COM1"
 <log4net>
   <appender name="mainAppender" type="log4net.Appender.RollingFileAppender">
     <lockingModel type="log4net.Appender.FileAppender+ExclusiveLock" />
-    <file type="log4net.Util.PatternString" value="%property{LogFileDir}/unitech.log" />
+    <file type="log4net.Util.PatternString" value="${AppData}/iiko/Unitech/unitech.log" />
     <threshold type="log4net.Core.Level" value="INFO" />
     <layout type="log4net.Layout.PatternLayout">
       <conversionPattern value="[%date{yyyy-MM-dd HH:mm:ss,fff}] %5p [%2t] [%type{1}:%M] - %m%n" />
