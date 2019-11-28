@@ -45,7 +45,7 @@ Write serial port name instread of "COM1"
   </logger>
 </log4net>
 ```
-You can optionaly set a different log level, e.g. **DEBUG** to log communication data with device.
+You can optionally set a different log level, e.g. **DEBUG** to log communication data with device.
 ```xml
 <threshold type="log4net.Core.Level" value="DEBUG" />
 ```
