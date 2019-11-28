@@ -23,7 +23,9 @@ Edit or create (if not exists) **Configuration.xml** file. Add new entry `Servic
 ```
 Write serial port name instread of "COM1"
 
-3. Put log4net.config file in the same folder as UnitechMsrSO.dll
+## Logger configuration
+
+3. Create **log4net.config** file in the same folder as UnitechMsrSO.dll
 
 ```xml
 <?xml version="1.0" encoding="utf-8"?>
@@ -31,7 +33,7 @@ Write serial port name instread of "COM1"
   <appender name="mainAppender" type="log4net.Appender.RollingFileAppender">
     <lockingModel type="log4net.Appender.FileAppender+ExclusiveLock" />
     <file type="log4net.Util.PatternString" value="%property{LogFileDir}/unitech.log" />
-    <threshold type="log4net.Core.Level" value="TRACE" />
+    <threshold type="log4net.Core.Level" value="INFO" />
     <layout type="log4net.Layout.PatternLayout">
       <conversionPattern value="[%date{yyyy-MM-dd HH:mm:ss,fff}] %5p [%2t] [%type{1}:%M] - %m%n" />
     </layout>
@@ -42,4 +44,8 @@ Write serial port name instread of "COM1"
     <appender-ref ref="mainAppender" />
   </logger>
 </log4net>
+```
+You can optionaly set a different log level, e.g. **DEBUG** to log communication data with device.
+```xml
+<threshold type="log4net.Core.Level" value="DEBUG" />
 ```
