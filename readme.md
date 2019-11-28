@@ -14,7 +14,6 @@ Edit or create (if not exists) **Configuration.xml** file. Add new entry `Servic
 
 ```xml
 <PointOfServiceConfig Version="1.0">у
-  ...
   <ServiceObject Name="Unitech" Type="Scanner">
     <Device HardwarePath="COM1" Enabled="yes" PnP="no">
       <LogicalName Name="Unitech01" />
